@@ -5,6 +5,7 @@ import json
 import math
 import re
 from typing import Dict
+from collections import defaultdict
 
 from latex2sympy2_extended import NormalizationConfig
 from math_verify import LatexExtractionConfig, parse, verify
@@ -20,6 +21,43 @@ if is_e2b_available():
 else:
     AsyncSandbox = None
 
+def reflection_bonus_reward(completions, **kwargs) -> list[float]:
+    """
+    Award a bonus for reflection patterns in completions.
+    - Up to 20 occurrences: 0.05 per occurrence (max 1.0).
+    - 21 to 50 occurrences: Fixed at 1.0.
+    - Beyond 50: 0.0.
+    """
+    reflection_base_words = [
+        "wait",
+        "recheck",
+        "retry",
+        "alternatively",
+        "however",
+        "verify",
+        "actually",
+        "let me think",
+    ]
+    reflection_base_words.sort(key=len, reverse=True)
+    
+    def check_reflection_pattern(response: str) -> dict[str, int]:
+        res = defaultdict(int)
+        for word in reflection_base_words:
+            pattern = r'(?:\b|^)' + re.escape(word) + r'(?:[,\s.!?]|$)'
+            res[word] = len(re.findall(pattern, response.lower()))
+        return res
+    
+    responses = [completion[0]["content"] for completion in completions]
+    reflection_scores = []
+    for r in responses:
+        reflection_dict = check_reflection_pattern(r)
+        reflection_count = sum(reflection_dict.values())
+        if reflection_count <= 50:
+            score = min(reflection_count, 20) * 0.05
+        else:
+            score = 0.0
+        reflection_scores.append(score)
+    return reflection_scores
 
 def accuracy_reward(completions, solution, **kwargs):
     """Reward function that checks if the completion is the same as the ground truth."""
