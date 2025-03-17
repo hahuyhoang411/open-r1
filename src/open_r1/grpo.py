@@ -191,7 +191,7 @@ def main(script_args, training_args, model_args):
         prompt.append({"role": "user", "content": example["problem"]})
         return {"prompt": prompt}
 
-    # dataset = dataset.map(make_conversation)
+    dataset = dataset.map(make_conversation)
 
     for split in dataset:
         if "messages" in dataset[split].column_names:
