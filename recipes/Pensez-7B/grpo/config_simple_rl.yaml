@@ -8,6 +8,9 @@ attn_implementation: flash_attention_2
 dataset_name: HoangHa/Pensez-GRPO-formatted-openr1
 dataset_config: default
 
+lora_r: 32
+lora_alpha: 64
+
 # GRPO trainer config
 bf16: true
 use_vllm: true
@@ -17,7 +20,7 @@ vllm_gpu_memory_utilization: 0.7
 # eval_strategy: steps
 # eval_steps: 250
 # per_device_eval_batch_size: 16
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 8
 gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: false
@@ -37,7 +40,7 @@ num_generations: 7
 num_train_epochs: 5
 output_dir: data/Pensez-GRPO
 overwrite_output_dir: true
-per_device_train_batch_size: 8
+per_device_train_batch_size: 2
 push_to_hub: true
 report_to:
 - wandb
