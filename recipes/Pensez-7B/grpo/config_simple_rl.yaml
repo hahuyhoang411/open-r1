@@ -1,0 +1,58 @@
+# Model arguments
+model_name_or_path: HoangHa/Pensez-v0.1-e5
+model_revision: main
+torch_dtype: bfloat16
+attn_implementation: flash_attention_2
+
+# Data training arguments
+dataset_name: HoangHa/Pensez-GRPO-formatted-openr1
+dataset_config: default
+
+# GRPO trainer config
+bf16: true
+use_vllm: true
+vllm_device: auto
+vllm_gpu_memory_utilization: 0.4
+# do_eval: true
+# eval_strategy: steps
+# eval_steps: 250
+# per_device_eval_batch_size: 16
+gradient_accumulation_steps: 4
+gradient_checkpointing: true
+gradient_checkpointing_kwargs:
+  use_reentrant: false
+hub_model_id: Pensez-v0.2
+hub_strategy: every_save
+learning_rate: 3.0e-06
+log_completions: true
+log_level: info
+logging_first_step: true
+logging_steps: 1
+logging_strategy: steps
+lr_scheduler_type: cosine
+max_prompt_length: 2048
+max_completion_length: 14336
+max_steps: -1
+num_generations: 7
+num_train_epochs: 5
+output_dir: data/Pensez-GRPO
+overwrite_output_dir: true
+per_device_train_batch_size: 8
+push_to_hub: false
+report_to:
+- wandb
+reward_funcs:
+- accuracy
+- length
+- repetition_penalty
+- cosine
+- reflection
+reward_weights:
+- 2.0
+- 0.5
+- 0.5
+- 0.5
+- 0.5
+save_strategy: "epoch"
+seed: 42
+warmup_ratio: 0.1
