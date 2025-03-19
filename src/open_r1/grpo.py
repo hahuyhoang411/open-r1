@@ -37,7 +37,8 @@ from open_r1.rewards import (
     tag_count_reward,
     reflection_bonus_reward,
     simple_accuracy_reward,
-    simple_len_reward
+    simple_len_reward,
+    get_simple_cosine_scaled_reward
 )
 from open_r1.utils import get_tokenizer
 from open_r1.utils.callbacks import get_callbacks
@@ -166,6 +167,13 @@ def main(script_args, training_args, model_args):
         "reflection":reflection_bonus_reward,
         "format": format_reward,
         "reasoning_steps": reasoning_steps_reward,
+        "simple_cosine": get_simple_cosine_scaled_reward(
+            min_value_wrong=script_args.cosine_min_value_wrong,
+            max_value_wrong=script_args.cosine_max_value_wrong,
+            min_value_correct=script_args.cosine_min_value_correct,
+            max_value_correct=script_args.cosine_max_value_correct,
+            max_len=script_args.cosine_max_len,
+        ),
         "cosine": get_cosine_scaled_reward(
             min_value_wrong=script_args.cosine_min_value_wrong,
             max_value_wrong=script_args.cosine_max_value_wrong,

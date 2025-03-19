@@ -300,6 +300,63 @@ def len_reward(completions: list[Dict[str, str]], solution: list[str], **kwargs)
 
     return rewards
 
+def get_simple_cosine_scaled_reward(
+    min_value_wrong: float = -1.0,
+    max_value_wrong: float = -0.5,
+    min_value_correct: float = 0.5,
+    max_value_correct: float = 1.0,
+    max_len: int = 1000,
+):
+    def simple_cosine_scaled_reward(completions, solution, **kwargs):
+        """Reward function that scales based on completion length using a cosine schedule.
+
+        Shorter correct solutions are rewarded more than longer ones.
+        Longer incorrect solutions are penalized less than shorter ones.
+
+        Args:
+            completions: List of model completions (each a list with a dict containing "content")
+            solution: List of ground truth answers (plain strings, no LaTeX)
+
+        Parameterized by:
+            min_value_wrong: Minimum reward for wrong answers
+            max_value_wrong: Maximum reward for wrong answers
+            min_value_correct: Minimum reward for correct answers
+            max_value_correct: Maximum reward for correct answers
+            max_len: Maximum length for scaling
+        """
+        contents = [completion[0]["content"] for completion in completions]
+        rewards = []
+
+        for content, sol in zip(contents, solution):
+            # Extract \boxed{} content from completion
+            content_boxed = extract_boxed_answer(content)
+            
+            # Check correctness: correct if boxed content matches solution, incorrect if no match or no boxed
+            is_correct = content_boxed == sol if content_boxed else False
+            
+            # Calculate length of the completion
+            gen_len = len(content)
+
+            # Apply cosine scaling based on length
+            progress = gen_len / max_len
+            cosine = math.cos(progress * math.pi)
+
+            # Set reward range based on correctness
+            if is_correct:
+                min_value = min_value_correct
+                max_value = max_value_correct
+            else:
+                # Swap min/max for incorrect answers
+                min_value = max_value_wrong
+                max_value = min_value_wrong
+
+            # Compute reward using cosine scaling
+            reward = min_value + 0.5 * (max_value - min_value) * (1.0 + cosine)
+            rewards.append(float(reward))
+
+        return rewards
+
+    return simple_cosine_scaled_reward
 
 def get_cosine_scaled_reward(
     min_value_wrong: float = -1.0,
