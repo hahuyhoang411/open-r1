@@ -58,6 +58,39 @@ def reflection_bonus_reward(completions, **kwargs) -> list[float]:
             score = 0.0
         reflection_scores.append(score)
     return reflection_scores
+import re
+
+def simple_accuracy_reward(completions, solution, **kwargs):
+    """Reward function that compares the last \\boxed{} content from completion with the solution."""
+    # Extract content from completions
+    contents = [completion[0]["content"] for completion in completions]
+    rewards = []
+    
+    for content, sol in zip(contents, solution):
+        # Extract the last \boxed{} content from the completion
+        content_boxed = extract_boxed_answer(content)
+        
+        # If no \boxed{} in completion, it’s wrong (reward = 0.0)
+        if not content_boxed:
+            reward = 0.0
+        else:
+            # Compare the boxed content from completion with the solution directly
+            reward = 1.0 if content_boxed == sol else 0.0
+        
+        rewards.append(reward)
+    
+    return rewards
+
+def extract_boxed_answer(text: str) -> str:
+    """Extract the content within the last \\boxed{} in the text."""
+    # Pattern to match \boxed{...}, capturing the content inside
+    pattern = r"\\boxed{(.*?)}"
+    matches = re.findall(pattern, text)
+    if matches:
+        # Return the last match, stripped of whitespace
+        return matches[-1].strip()
+    # Return empty string if no \boxed{} is found
+    return ""
 
 def accuracy_reward(completions, solution, **kwargs):
     """Reward function that checks if the completion is the same as the ground truth."""
@@ -151,6 +184,49 @@ def reasoning_steps_reward(completions, **kwargs):
     # Magic number 3 to encourage 3 steps and more, otherwise partial reward
     return [min(1.0, count / 3) for count in matches]
 
+def simple_len_reward(completions: list[dict[str, str]], solution: list[str], **kwargs) -> list[float]:
+    """Compute length-based rewards using simple \boxed{} extraction for correctness.
+
+    Args:
+        completions: List of model completions (each a list with a dict containing "content")
+        solution: List of ground truth answers (plain strings, no LaTeX)
+
+    Returns:
+        List of rewards where:
+        - For correct answers: reward = 0.5 - (len - min_len)/(max_len - min_len)
+        - For incorrect answers: reward = min(0, 0.5 - (len - min_len)/(max_len - min_len))
+    """
+    # Extract content from completions
+    contents = [completion[0]["content"] for completion in completions]
+
+    # Check correctness using \boxed{} extraction
+    correctness = []
+    for content, sol in zip(contents, solution):
+        content_boxed = extract_boxed_answer(content)
+        # Correct if boxed content matches solution, incorrect if no boxed content or mismatch
+        is_correct = content_boxed == sol if content_boxed else False
+        correctness.append(is_correct)
+
+    # Calculate lengths of the content strings
+    lengths = [len(content) for content in contents]
+    min_len = min(lengths)
+    max_len = max(lengths)
+
+    # If all responses have the same length, return zero rewards
+    if max_len == min_len:
+        return [0.0] * len(completions)
+
+    # Compute rewards based on length and correctness
+    rewards = []
+    for length, is_correct in zip(lengths, correctness):
+        lambda_val = 0.5 - (length - min_len) / (max_len - min_len)
+        if is_correct:
+            reward = lambda_val
+        else:
+            reward = min(0, lambda_val)
+        rewards.append(float(reward))
+
+    return rewards
 
 def len_reward(completions: list[Dict[str, str]], solution: list[str], **kwargs) -> float:
     """Compute length-based rewards to discourage overthinking and promote token efficiency.

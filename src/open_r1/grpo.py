@@ -35,7 +35,9 @@ from open_r1.rewards import (
     len_reward,
     reasoning_steps_reward,
     tag_count_reward,
-    reflection_bonus_reward
+    reflection_bonus_reward,
+    simple_accuracy_reward,
+    simple_len_reward
 )
 from open_r1.utils import get_tokenizer
 from open_r1.utils.callbacks import get_callbacks
@@ -159,6 +161,7 @@ def main(script_args, training_args, model_args):
 
     # Get reward functions
     REWARD_FUNCS_REGISTRY = {
+        "simple_accuracy": simple_accuracy_reward,
         "accuracy": accuracy_reward,
         "reflection":reflection_bonus_reward,
         "format": format_reward,
@@ -175,6 +178,7 @@ def main(script_args, training_args, model_args):
             max_penalty=script_args.repetition_max_penalty,
         ),
         "length": len_reward,
+        "simple_length": simple_len_reward,
         "code": code_reward,
         "code_format": get_code_format_reward(language=script_args.code_language),
         "tag_count": tag_count_reward,

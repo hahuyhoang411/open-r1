@@ -24,6 +24,8 @@ from open_r1.rewards import (
     len_reward,
     reasoning_steps_reward,
     tag_count_reward,
+    simple_accuracy_reward,
+    simple_len_reward
 )
 
 
@@ -364,7 +366,123 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         completion = [[{"content": "Some reasoning\nThe answer"}]]
         rewards = tag_count_reward(completion)
         self.assertEqual(rewards[0], 0.0)
+    # Tests for simple_accuracy_reward
+    def test_simple_accuracy_reward_correct_answer(self):
+        """Test simple_accuracy_reward with a correct boxed answer."""
+        completion = [[{"content": r"Some text \boxed{42}"}]]
+        solution = ["42"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
 
+    def test_simple_accuracy_reward_wrong_answer(self):
+        """Test simple_accuracy_reward with an incorrect boxed answer."""
+        completion = [[{"content": r"Some text \boxed{43}"}]]
+        solution = ["42"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 0.0)
+
+    def test_simple_accuracy_reward_no_boxed(self):
+        """Test simple_accuracy_reward with no boxed content."""
+        completion = [[{"content": "Some text without a box"}]]
+        solution = ["42"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 0.0)
+
+    def test_simple_accuracy_reward_multiple_completions(self):
+        """Test simple_accuracy_reward with multiple completions."""
+        completions = [
+            [{"content": r"Text \boxed{42}"}],
+            [{"content": r"Text \boxed{43}"}],
+            [{"content": "No box"}]
+        ]
+        solutions = ["42", "42", "42"]
+        rewards = simple_accuracy_reward(completions, solutions)
+        self.assertEqual(len(rewards), 3)
+        self.assertEqual(rewards, [1.0, 0.0, 0.0])
+
+    # Tests for simple_len_reward
+    def test_simple_len_reward_same_length(self):
+        """Test simple_len_reward when all completions have the same length."""
+        completions = [
+            [{"content": r"Text \boxed{42}"}],
+            [{"content": r"Text \boxed{43}"}]
+        ]
+        solutions = ["42", "42"]
+        rewards = simple_len_reward(completions, solutions)
+        self.assertEqual(rewards, [0.0, 0.0])
+
+    def test_simple_len_reward_different_lengths_correct(self):
+        """Test simple_len_reward with different length correct answers."""
+        completions = [
+            [{"content": r"\boxed{42}"}],              # len=8
+            [{"content": r"Longer text \boxed{42}"}]   # len=19
+        ]
+        solutions = ["42", "42"]
+        rewards = simple_len_reward(completions, solutions)
+        self.assertGreater(rewards[0], rewards[1])  # Shorter gets higher reward
+        self.assertAlmostEqual(rewards[0], 0.5, places=6)  # Shortest correct gets 0.5
+        self.assertGreater(rewards[1], 0.0)  # Longer correct still positive
+
+    def test_simple_len_reward_different_lengths_incorrect(self):
+        """Test simple_len_reward with different length incorrect answers."""
+        completions = [
+            [{"content": r"\boxed{43}"}],              # len=8
+            [{"content": r"Longer text \boxed{43}"}]  # len=19
+        ]
+        solutions = ["42", "42"]
+        rewards = simple_len_reward(completions, solutions)
+        self.assertLessEqual(rewards[0], 0.0)  # Incorrect answers non-positive
+        self.assertLessEqual(rewards[1], 0.0)
+        self.assertGreater(rewards[0], rewards[1])  # Shorter incorrect less penalized
+
+    def test_simple_len_reward_mixed_correctness(self):
+        """Test simple_len_reward with mixed correctness and lengths."""
+        completions = [
+            [{"content": r"\boxed{42}"}],              # len=8, correct
+            [{"content": r"Text \boxed{42}"}],         # len=12, correct
+            [{"content": r"\boxed{43}"}],               # len=8, incorrect
+            [{"content": r"Long text \boxed{43}"}]     # len=17, incorrect
+        ]
+        solutions = ["42", "42", "42", "42"]
+        rewards = simple_len_reward(completions, solutions)
+        # Correct answers
+        self.assertGreater(rewards[0], 0.0)
+        self.assertGreater(rewards[1], 0.0)
+        self.assertGreater(rewards[0], rewards[1])  # Shorter correct > longer correct
+        # Incorrect answers
+        self.assertLessEqual(rewards[2], 0.0)
+        self.assertLessEqual(rewards[3], 0.0)
+        self.assertGreater(rewards[2], rewards[3])  # Shorter incorrect > longer incorrect
+        # Cross-comparison
+        self.assertGreater(rewards[1], rewards[2])  # Correct > incorrect
+
+    def test_simple_len_reward_no_boxed(self):
+        """Test simple_len_reward with no boxed content."""
+        completions = [
+            [{"content": "Short text"}],              # len=10, incorrect
+            [{"content": "Longer text here"}]         # len=14, incorrect
+        ]
+        solutions = ["42", "42"]
+        rewards = simple_len_reward(completions, solutions)
+        self.assertLessEqual(rewards[0], 0.0)
+        self.assertLessEqual(rewards[1], 0.0)
+        self.assertGreater(rewards[0], rewards[1])  # Shorter incorrect less penalized
+
+    # Original tests remain below (omitted for brevity)
+
+    def test_accuracy_reward_correct_answer(self):
+        """Test accuracy_reward with a correct answer."""
+        completion = [[{"content": r"\boxed{\frac{63}{400}}"}]]
+        solution = [r"\frac{63}{400}"]
+        rewards = accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_accuracy_reward_wrong_answer(self):
+        """Test accuracy_reward with an incorrect answer."""
+        completion = [[{"content": r"\boxed{\frac{64}{400}}"}]]
+        solution = [r"\frac{63}{400}"]
+        rewards = accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 0.0)
 
 class TestCodeFormat(unittest.TestCase):
     def test_correct_python_format(self):
