@@ -42,8 +42,8 @@ push_to_hub: true
 report_to:
 - wandb
 reward_funcs:
-- accuracy_simple
-- length_simple
+- simple_accuracy
+- simple_length
 - repetition_penalty
 - cosine
 - reflection
