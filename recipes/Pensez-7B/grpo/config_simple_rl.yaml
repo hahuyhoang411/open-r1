@@ -45,7 +45,7 @@ reward_funcs:
 - simple_accuracy
 - simple_length
 - repetition_penalty
-- cosine
+- simple_cosine
 - reflection
 reward_weights:
 - 2.0
