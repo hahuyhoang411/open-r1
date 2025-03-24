@@ -408,6 +408,7 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         completion = [[{"content": "Some reasoning\nThe answer"}]]
         rewards = tag_count_reward(completion)
         self.assertEqual(rewards[0], 0.0)
+
     # Tests for simple_accuracy_reward
     def test_simple_accuracy_reward_correct_answer(self):
         """Test simple_accuracy_reward with a correct boxed answer."""
@@ -420,6 +421,20 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         """Test simple_accuracy_reward with an incorrect boxed answer."""
         completion = [[{"content": r"Some text \boxed{43}"}]]
         solution = ["42"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 0.0)
+
+    def test_simple_accuracy_reward_latex_correct_answer(self):
+        """Test simple_accuracy_reward with a correct boxed answer."""
+        completion = [[{"content": r"Some text \boxed{42}"}]]
+        solution = ["$42$"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_simple_accuracy_reward_latex_wrong_answer(self):
+        """Test simple_accuracy_reward with an incorrect boxed answer."""
+        completion = [[{"content": r"Some text \boxed{43}"}]]
+        solution = ["$42$"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 0.0)
 
