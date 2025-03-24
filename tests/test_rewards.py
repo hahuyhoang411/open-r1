@@ -461,6 +461,27 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
 
+    def test_simple_accuracy_reward_text_solution(self):
+        """Test simple_accuracy_reward with a text-based solution."""
+        completion = [[{"content": r"The answer is \boxed{Argile}"}]]
+        solution = ["Argile"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_simple_accuracy_reward_text_solution_multiple_words(self):
+        """Test simple_accuracy_reward with a multi-word text solution."""
+        completion = [[{"content": r"The strategy is \boxed{Checkmate Strategies}"}]]
+        solution = ["Checkmate Strategies"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_simple_accuracy_reward_numbered_solution(self):
+        """Test simple_accuracy_reward with a numbered sequence solution."""
+        completion = [[{"content": r"The sequence is \boxed{(1)(2)(3)(4)(5)}"}]]
+        solution = ["(1)(2)(3)(4)(5)"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
+
     def test_simple_accuracy_reward_no_boxed(self):
         """Test simple_accuracy_reward with no boxed content."""
         completion = [[{"content": "Some text without a box"}]]
