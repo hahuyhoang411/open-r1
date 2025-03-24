@@ -426,7 +426,9 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
 
     def test_simple_accuracy_reward_latex_correct_answer(self):
         """Test simple_accuracy_reward with a correct boxed answer."""
-        completion = [[{"content": r"Some text \boxed{42}"}]]
+        completion = [
+            [{"content": r"Some text \boxed{42}"}]
+        ]
         solution = ["$42$"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
@@ -437,6 +439,27 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         solution = ["$42$"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 0.0)
+
+    def test_simple_accuracy_reward_latex_fraction(self):
+        """Test simple_accuracy_reward with a correct boxed fraction."""
+        completion = [[{"content": r"The answer is \boxed{\dfrac7{12}}"}]]
+        solution = ["$\\dfrac7{12}$"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_simple_accuracy_reward_latex_coordinates(self):
+        """Test simple_accuracy_reward with coordinates."""
+        completion = [[{"content": r"The coordinates are \boxed{(x+n,y)}"}]]
+        solution = ["The coordinates of $R(x,y)$ are $(x+n,y)$."]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
+
+    def test_simple_accuracy_reward_latex_complex(self):
+        """Test simple_accuracy_reward with a complex LaTeX expression."""
+        completion = [[{"content": r"The result is \boxed{ \frac{( \varepsilon_{2}-\varepsilon_{1} ) \varepsilon_{0} S} {d \operatorname{l n} \frac{\varepsilon_{2}} {\varepsilon_{1}}} }"}]]
+        solution = ["$$ \\frac{( \\varepsilon_{2}-\\varepsilon_{1} ) \\varepsilon_{0} S} {d \\operatorname{l n} \\frac{\\varepsilon_{2}} {\\varepsilon_{1}}} $$"]
+        rewards = simple_accuracy_reward(completion, solution)
+        self.assertEqual(rewards[0], 1.0)
 
     def test_simple_accuracy_reward_no_boxed(self):
         """Test simple_accuracy_reward with no boxed content."""
