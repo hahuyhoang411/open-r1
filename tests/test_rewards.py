@@ -412,14 +412,14 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
     # Tests for simple_accuracy_reward
     def test_simple_accuracy_reward_correct_answer(self):
         """Test simple_accuracy_reward with a correct boxed answer."""
-        completion = [[{"content": r"Some text \boxed{42}"}]]
+        completion = [[{"content": r"Some text \\boxed{42}"}]]
         solution = ["42"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
 
     def test_simple_accuracy_reward_wrong_answer(self):
         """Test simple_accuracy_reward with an incorrect boxed answer."""
-        completion = [[{"content": r"Some text \boxed{43}"}]]
+        completion = [[{"content": r"Some text \\boxed{43}"}]]
         solution = ["42"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 0.0)
@@ -427,7 +427,7 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
     def test_simple_accuracy_reward_latex_correct_answer(self):
         """Test simple_accuracy_reward with a correct boxed answer."""
         completion = [
-            [{"content": r"Some text \boxed{42}"}]
+            [{"content": r"Some text \\boxed{42}"}]
         ]
         solution = ["$42$"]
         rewards = simple_accuracy_reward(completion, solution)
@@ -435,49 +435,49 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
 
     def test_simple_accuracy_reward_latex_wrong_answer(self):
         """Test simple_accuracy_reward with an incorrect boxed answer."""
-        completion = [[{"content": r"Some text \boxed{43}"}]]
+        completion = [[{"content": r"Some text \\boxed{43}"}]]
         solution = ["$42$"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 0.0)
 
     def test_simple_accuracy_reward_latex_fraction(self):
         """Test simple_accuracy_reward with a correct boxed fraction."""
-        completion = [[{"content": r"The answer is \boxed{\dfrac7{12}}"}]]
+        completion = [[{"content": r"The answer is \\boxed{\dfrac7{12}}"}]]
         solution = ["$\\dfrac7{12}$"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
 
     def test_simple_accuracy_reward_latex_coordinates(self):
         """Test simple_accuracy_reward with coordinates."""
-        completion = [[{"content": r"The coordinates are \boxed{(x+n,y)}"}]]
+        completion = [[{"content": r"The coordinates are \\boxed{(x+n,y)}"}]]
         solution = ["The coordinates of $R(x,y)$ are $(x+n,y)$."]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
 
     def test_simple_accuracy_reward_latex_complex(self):
         """Test simple_accuracy_reward with a complex LaTeX expression."""
-        completion = [[{"content": r"The result is \boxed{ \frac{( \varepsilon_{2}-\varepsilon_{1} ) \varepsilon_{0} S} {d \operatorname{l n} \frac{\varepsilon_{2}} {\varepsilon_{1}}} }"}]]
+        completion = [[{"content": r"The result is \\boxed{ \frac{( \varepsilon_{2}-\varepsilon_{1} ) \varepsilon_{0} S} {d \operatorname{l n} \frac{\varepsilon_{2}} {\varepsilon_{1}}} }"}]]
         solution = ["$$ \\frac{( \\varepsilon_{2}-\\varepsilon_{1} ) \\varepsilon_{0} S} {d \\operatorname{l n} \\frac{\\varepsilon_{2}} {\\varepsilon_{1}}} $$"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
 
     def test_simple_accuracy_reward_text_solution(self):
         """Test simple_accuracy_reward with a text-based solution."""
-        completion = [[{"content": r"The answer is \boxed{Argile}"}]]
+        completion = [[{"content": r"The answer is \\boxed{Argile}"}]]
         solution = ["Argile"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
 
     def test_simple_accuracy_reward_text_solution_multiple_words(self):
         """Test simple_accuracy_reward with a multi-word text solution."""
-        completion = [[{"content": r"The strategy is \boxed{Checkmate Strategies}"}]]
+        completion = [[{"content": r"The strategy is \\boxed{Checkmate Strategies}"}]]
         solution = ["Checkmate Strategies"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
 
     def test_simple_accuracy_reward_numbered_solution(self):
         """Test simple_accuracy_reward with a numbered sequence solution."""
-        completion = [[{"content": r"The sequence is \boxed{(1)(2)(3)(4)(5)}"}]]
+        completion = [[{"content": r"The sequence is \\boxed{(1)(2)(3)(4)(5)}"}]]
         solution = ["(1)(2)(3)(4)(5)"]
         rewards = simple_accuracy_reward(completion, solution)
         self.assertEqual(rewards[0], 1.0)
@@ -492,8 +492,8 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
     def test_simple_accuracy_reward_multiple_completions(self):
         """Test simple_accuracy_reward with multiple completions."""
         completions = [
-            [{"content": r"Text \boxed{42}"}],
-            [{"content": r"Text \boxed{43}"}],
+            [{"content": r"Text \\boxed{42}"}],
+            [{"content": r"Text \\boxed{43}"}],
             [{"content": "No box"}]
         ]
         solutions = ["42", "42", "42"]
@@ -505,8 +505,8 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
     def test_simple_len_reward_same_length(self):
         """Test simple_len_reward when all completions have the same length."""
         completions = [
-            [{"content": r"Text \boxed{42}"}],
-            [{"content": r"Text \boxed{43}"}]
+            [{"content": r"Text \\boxed{42}"}],
+            [{"content": r"Text \\boxed{43}"}]
         ]
         solutions = ["42", "42"]
         rewards = simple_len_reward(completions, solutions)
@@ -516,7 +516,7 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         """Test simple_len_reward with different length correct answers."""
         completions = [
             [{"content": r"\boxed{42}"}],              # len=8
-            [{"content": r"Longer text \boxed{42}"}]   # len=19
+            [{"content": r"Longer text \\boxed{42}"}]   # len=19
         ]
         solutions = ["42", "42"]
         rewards = simple_len_reward(completions, solutions)
@@ -528,7 +528,7 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         """Test simple_len_reward with different length incorrect answers."""
         completions = [
             [{"content": r"\boxed{43}"}],              # len=8
-            [{"content": r"Longer text \boxed{43}"}]  # len=19
+            [{"content": r"Longer text \\boxed{43}"}]  # len=19
         ]
         solutions = ["42", "42"]
         rewards = simple_len_reward(completions, solutions)
@@ -540,9 +540,9 @@ class TestRepetitionPenaltyReward(unittest.TestCase):
         """Test simple_len_reward with mixed correctness and lengths."""
         completions = [
             [{"content": r"\boxed{42}"}],              # len=8, correct
-            [{"content": r"Text \boxed{42}"}],         # len=12, correct
+            [{"content": r"Text \\boxed{42}"}],         # len=12, correct
             [{"content": r"\boxed{43}"}],               # len=8, incorrect
-            [{"content": r"Long text \boxed{43}"}]     # len=17, incorrect
+            [{"content": r"Long text \\boxed{43}"}]     # len=17, incorrect
         ]
         solutions = ["42", "42", "42", "42"]
         rewards = simple_len_reward(completions, solutions)
