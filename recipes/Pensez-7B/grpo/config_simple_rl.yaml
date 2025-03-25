@@ -7,6 +7,7 @@ attn_implementation: flash_attention_2
 # Data training arguments
 dataset_name: HoangHa/Pensez-GRPO-formatted-openr1
 dataset_config: default
+# system_prompt: ""
 
 # GRPO trainer config
 bf16: true
@@ -36,7 +37,7 @@ lr_scheduler_type: cosine
 max_prompt_length: 1024
 max_completion_length: 7168
 max_steps: -1
-num_generations: 7
+num_generations: 12
 num_train_epochs: 5
 output_dir: data/Pensez-GRPO
 overwrite_output_dir: true
@@ -52,9 +53,9 @@ reward_funcs:
 - reflection
 reward_weights:
 - 2.0
+- 1.0
 - 0.5
-- 0.5
-- 0.5
+- 1.0
 - 0.5
 save_strategy: "epoch"
 seed: 42

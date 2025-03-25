@@ -86,7 +86,7 @@ def simple_accuracy_reward(completions, solution, **kwargs):
 def extract_boxed_answer(text: str) -> str:
     """Extract the content within the last \\boxed{} in the text."""
     # Pattern to match \boxed{...}, capturing the content inside
-    pattern = r"\\boxed{(.*?)}"
+    pattern = r"\boxed{(.*?)}"
     matches = re.findall(pattern, text)
     if matches:
         # Return the last match, stripped of whitespace
