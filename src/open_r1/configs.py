@@ -21,7 +21,7 @@ import trl
 
 # TODO: add the shared options with a mixin to reduce code duplication
 @dataclass
-class GRPOConfig(trl.GRPOTrainingArguments):
+class GRPOConfig(trl.GRPOConfig):
     """
     Configuration class for GRPO training.
     """
