@@ -677,6 +677,7 @@ async def run_script(sbx: AsyncSandbox, script: str, language: str) -> float:
 
 def get_reward_funcs(script_args) -> list[Callable]:
     REWARD_FUNCS_REGISTRY = {
+        'reflection': reflection_bonus_reward,
         "simple_accuracy": simple_accuracy_reward,
         "simple_cosine": get_simple_cosine_scaled_reward(
             min_value_wrong=script_args.cosine_min_value_wrong,
