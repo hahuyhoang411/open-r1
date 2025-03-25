@@ -21,9 +21,9 @@ import trl
 
 # TODO: add the shared options with a mixin to reduce code duplication
 @dataclass
-class GRPOConfig(trl.GRPOConfig):
+class GRPOConfig(trl.GRPOTrainingArguments):
     """
-    args for callbacks, benchmarks etc
+    Configuration class for GRPO training.
     """
 
     benchmarks: list[str] = field(
@@ -49,6 +49,24 @@ class GRPOConfig(trl.GRPOConfig):
     wandb_project: Optional[str] = field(
         default=None,
         metadata={"help": ("The project to store runs under.")},
+    )
+    scale_rewards: bool = field(
+        default=False,
+        metadata={
+            "help": "Whether to scale rewards based on completion length using cosine scaling"
+        },
+    )
+    beta: float = field(
+        default=0.0,
+        metadata={
+            "help": "The beta parameter for GRPO training, controlling the strength of the regularization"
+        },
+    )
+    epsilon_high: float = field(
+        default=0.28,
+        metadata={
+            "help": "The upper bound for epsilon in GRPO training, controlling the exploration-exploitation tradeoff"
+        },
     )
 
 

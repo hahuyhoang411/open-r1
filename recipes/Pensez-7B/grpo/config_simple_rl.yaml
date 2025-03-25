@@ -11,6 +11,9 @@ dataset_config: default
 # GRPO trainer config
 bf16: true
 use_vllm: true
+beta: 0.0
+epsilon_high: 0.28
+scale_rewards: false
 # vllm_device: auto
 # vllm_gpu_memory_utilization: 0.7
 # do_eval: true
