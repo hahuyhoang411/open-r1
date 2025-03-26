@@ -72,18 +72,12 @@ def simple_accuracy_reward(completions, solution, **kwargs):
         # Extract the last \boxed{} content from the completion
         content_boxed = extract_boxed_answer(content)
         
-        # Debug print
-        print(f"Solution: '{sol}'")
-        print(f"Parsed boxed content: '{content_boxed}'")
-        
-        # If no \boxed{} in completion, it's wrong (reward = 0.0)
+        # If no \boxed{} in completion, it’s wrong (reward = 0.0)
         if not content_boxed:
             reward = 0.0
-            print("No boxed content found")
         else:
             # Compare the boxed content from completion with the solution directly
             reward = 1.0 if content_boxed == sol else 0.0
-            print(f"Match: {reward == 1.0}")
         
         rewards.append(reward)
     
@@ -92,7 +86,7 @@ def simple_accuracy_reward(completions, solution, **kwargs):
 def extract_boxed_answer(text: str) -> str:
     """Extract the content within the last \\boxed{} in the text."""
     # Pattern to match \boxed{...}, capturing the content inside
-    pattern = r"\boxed{(.*?)}"
+    pattern = r"\\boxed{(.*?)}"
     matches = re.findall(pattern, text)
     if matches:
         # Return the last match, stripped of whitespace
