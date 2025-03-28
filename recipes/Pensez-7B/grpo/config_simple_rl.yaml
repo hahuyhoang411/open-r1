@@ -7,7 +7,7 @@ attn_implementation: flash_attention_2
 # Data training arguments
 dataset_name: HoangHa/Pensez-GRPO-formatted-openr1
 dataset_config: default
-# system_prompt: ""
+system_prompt: "You are a precise and thoughtful assistant designed to provide accurate answers. Before responding, take a moment to carefully consider the question and think through your approach step-by-step. Focus on smart, efficient reasoning rather than lengthy explanations. After forming your answer, recheck it to ensure it’s correct and logical. Present your final answer clearly at the end, enclosed within `\\boxed{}`."
 
 # GRPO trainer config
 bf16: true
@@ -21,13 +21,13 @@ scale_rewards: false
 # eval_strategy: steps
 # eval_steps: 250
 # per_device_eval_batch_size: 16
-gradient_accumulation_steps: 8
+gradient_accumulation_steps: 4
 gradient_checkpointing: true
 gradient_checkpointing_kwargs:
   use_reentrant: false
 hub_model_id: Pensez-v0.2
 hub_strategy: every_save
-learning_rate: 3.0e-06
+learning_rate: 1.0e-06
 log_completions: true
 log_level: info
 logging_first_step: true
@@ -36,27 +36,33 @@ logging_strategy: steps
 lr_scheduler_type: cosine
 max_prompt_length: 1024
 max_completion_length: 7168
+# 15360
 max_steps: -1
-num_generations: 12
-num_train_epochs: 5
+num_generations: 6
+num_train_epochs: 1
 output_dir: data/Pensez-GRPO
 overwrite_output_dir: true
-per_device_train_batch_size: 2
+per_device_train_batch_size: 1
 push_to_hub: true
 report_to:
 - wandb
 reward_funcs:
 - simple_accuracy
-- simple_length
-- repetition_penalty
+# - simple_length
+# - repetition_penalty
 - simple_cosine
-- reflection
+# - reflection
 reward_weights:
-- 2.0
 - 1.0
+# - 0.5
+# - 0.5
 - 0.5
-- 1.0
-- 0.5
-save_strategy: "epoch"
+# - 0.5
+# save_strategy: "epoch"
+save_strategy: "steps"
+save_steps: 100
+save_total_limit: 1
 seed: 42
 warmup_ratio: 0.1
+# temperature: 0.6
+# repetition_penalty: 1.1

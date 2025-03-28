@@ -12,6 +12,7 @@ from math_verify import LatexExtractionConfig, parse, verify
 
 from .utils import is_e2b_available
 from .utils.ioi import SubtaskResult, add_includes, get_piston_client_from_env, score_subtask
+from transformers import AutoTokenizer
 
 from collections import defaultdict
 
@@ -485,6 +486,92 @@ def get_repetition_penalty_reward(ngram_size: int, max_penalty: float):
     return repetition_penalty_reward
 
 
+def get_length_bonus_reward(
+    length_bonus: float = 0.5,
+    min_edge: int = 2048,
+    low_target: int = 2048 * 2,
+    high_target: int = 2048 * 3,
+    max_edge: int = 2048 * 4,
+) -> Callable:
+    """
+    Factory function to create a reward function that gives a bonus for responses
+    within a target token length range.
+
+    Args:
+        length_bonus (float): The maximum bonus multiplier to apply (when score is 1.0).
+        min_edge (int): Token count below which the score is 0.
+        low_target (int): Token count at which the score reaches 1.0 (from below).
+        high_target (int): Token count at which the score starts decreasing from 1.0.
+        max_edge (int): Token count above which the score is 0.
+
+    Returns:
+        Callable: The actual reward function with the configured parameters.
+    """
+
+    def length_bonus_reward_func(completions, **kwargs) -> list[float]:
+        """
+        Actual reward function: Bonus for responses within a target token length range.
+        Requires a tokenizer to be passed via kwargs['tokenizer'].
+        """
+        # Extract content from completions
+        responses = [completion[0]["content"] for completion in completions]
+
+        # Get tokenizer from kwargs
+        tokenizer = AutoTokenizer.from_pretrained("HoangHa/Pensez-v0.1-e5")
+        if not tokenizer:
+            # Or potentially return [0.0] * len(responses) or log a warning,
+            # depending on how critical this reward is. Raising an error is also valid.
+            raise ValueError("Tokenizer required for length_bonus_reward_func but not found in kwargs")
+
+        # Calculate token counts
+        try:
+            token_counts = [len(tokenizer.encode(r)) for r in responses]
+        except Exception as e:
+            print(f"Warning: Tokenization failed in length_bonus_reward_func: {e}. Returning zero rewards.")
+            # Handle tokenization errors gracefully, e.g., return 0 scores
+            return [0.0] * len(responses)
+
+        length_scores = []
+        # Use parameters from the outer factory function
+        local_min_edge, local_low_target, local_high_target, local_max_edge = min_edge, low_target, high_target, max_edge
+
+        for count in token_counts:
+            score = 0.0 # Default score
+            try:
+                if count < local_min_edge:
+                    score = 0.0
+                elif local_min_edge <= count < local_low_target:
+                    # Handle potential division by zero if edges are equal
+                    denominator = (local_low_target - local_min_edge)
+                    score = (count - local_min_edge) / denominator if denominator > 0 else 1.0
+                elif local_low_target <= count <= local_high_target:
+                    score = 1.0
+                elif local_high_target < count <= local_max_edge:
+                    # Handle potential division by zero if edges are equal
+                    denominator = (local_max_edge - local_high_target)
+                    score = (local_max_edge - count) / denominator if denominator > 0 else 0.0
+                else: # count > local_max_edge
+                    score = 0.0
+            except ZeroDivisionError:
+                # This case should ideally be caught by denominator checks, but as a fallback
+                print(f"Warning: Zero division encountered in length_bonus scoring for count {count}. "
+                      f"Edges: {local_min_edge}, {local_low_target}, {local_high_target}, {local_max_edge}. Assigning score 0.")
+                score = 0.0
+            except Exception as e:
+                # Catch any other unexpected errors during scoring
+                print(f"Warning: Error calculating length score for count {count}: {e}. Assigning score 0.")
+                score = 0.0
+
+            # Ensure score is within [0, 1] range after calculation
+            score = max(0.0, min(1.0, score))
+            length_scores.append(score)
+
+        # Apply the final bonus multiplier
+        return [length_bonus * score for score in length_scores]
+
+    # Return the configured inner reward function
+    return length_bonus_reward_func
+
 def _init_event_loop():
     try:
         loop = asyncio.get_event_loop()
@@ -679,6 +766,13 @@ def get_reward_funcs(script_args) -> list[Callable]:
     REWARD_FUNCS_REGISTRY = {
         'reflection': reflection_bonus_reward,
         "simple_accuracy": simple_accuracy_reward,
+        "length_bonus": get_length_bonus_reward(
+            length_bonus=script_args.length_bonus_factor,
+            min_edge=script_args.length_bonus_min_edge,
+            low_target=script_args.length_bonus_low_target,
+            high_target=script_args.length_bonus_high_target,
+            max_edge=script_args.length_bonus_max_edge,
+        ),
         "simple_cosine": get_simple_cosine_scaled_reward(
             min_value_wrong=script_args.cosine_min_value_wrong,
             max_value_wrong=script_args.cosine_max_value_wrong,
